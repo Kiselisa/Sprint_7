@@ -3,7 +3,10 @@ import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
 import model.CourierLogin;
 import model.CourierModel;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import steps.CourierSteps;
 
 import static data.CourierData.DELETE_COURIER;
 import static io.restassured.RestAssured.given;
@@ -13,17 +16,31 @@ import static steps.CourierSteps.*;
 
 public class DeleteCourierTest extends BaseApiTest {
 
-    @Test
-    @DisplayName("Успешное создание и удаление курьера")
-    public void testCreateAndDeleteCourierSuccess() {
+    private int courierId;
+
+    @Before
+    public void prepare() {
         CourierModel courier = CourierData.getRandomCourier();
         createCourier(courier);
-        int courierId = getCourierId(new CourierLogin(courier.getLogin(), courier.getPassword()));
+        courierId = CourierSteps.getCourierId(new CourierLogin(courier.getLogin(), courier.getPassword()));
+    }
+
+    @After
+    public void tearDown() {
+        if (courierId != 0) {
+            deleteCourier(courierId);
+        }
+    }
+
+    @Test
+    @DisplayName("Успешное удаление курьера")
+    public void testCreateAndDeleteCourierSuccess() {
         deleteCourier(courierId)
                 .then()
                 .log().all()
                 .statusCode(HTTP_OK)
                 .body("ok", equalTo(true));
+        courierId = 0;
     }
 
     @Test
